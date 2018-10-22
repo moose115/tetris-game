@@ -1,0 +1,23 @@
+{
+  "name": "tetris-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "browser-sync start --server --files \"css/*.css\" \"*.html\" \"js/*.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mustaf115/tetris-game.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mustaf115/tetris-game/issues"
+  },
+  "homepage": "https://github.com/mustaf115/tetris-game#readme",
+  "devDependencies": {
+    "browser-sync": "^2.26.3"
+  }
+}
