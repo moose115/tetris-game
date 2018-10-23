@@ -49,28 +49,60 @@ class Piece {
     }
 
     moveRight() {
-        this.undraw();
-        this.x++;
-        this.draw();
+        if(!this.isCollision(1, 0)) {
+            this.undraw();
+            this.x++;
+            this.draw();
+        }
     }
 
     moveLeft() {
-        this.undraw();
-        this.x--;
-        this.draw();
+        if(!this.isCollision(-1, 0)) {
+            this.undraw();
+            this.x--;
+            this.draw();
+        }
     }
 
     moveDown() {
-        this.undraw();
-        this.y++;
-        this.draw();
+        if(!this.isCollision(0, 1)) {
+            this.undraw();
+            this.y++;
+            this.draw();
+        }
     }
     
     rotate() {
         this.undraw();
-        this.tetrominoNumber = (this.tetrominoNumber + 1) % 4;
+        this.tetrominoNumber = (this.tetrominoNumber + 1) % this.tetromino.length;
         this.activeTetromino = this.tetromino[this.tetrominoNumber];
         this.draw();
+    }
+
+    isCollision(deltaX, deltaY) {
+        for(let r = 0; r < this.activeTetromino.length; r++) {
+            for(let c = 0; c < this.activeTetromino.length; c++) {
+                if(!this.activeTetromino[r][c]) {
+                    continue;
+                }
+                let nextX = this.x + c + deltaX;
+                let nextY = this.y + r + deltaY;
+
+                if(nextX < 0 || nextX > COL || nextY >= ROW) { //is colliding with walls
+                    return true;
+                }
+
+                if(nextY < 0) { //don't check if piece over the board
+                    continue;
+                }
+
+                if(board[nextY][nextX] !== VACANT) { //check next square
+                    return true;
+                }
+                
+            }
+        }
+        return false;
     }
 }
 
