@@ -178,7 +178,7 @@ class Piece {
                         }
                     }
                     for(let j = 0; j < COL; j++) { //top row doesn't have row above to inherit, so set to Vacant
-                        board[0][c] = VACANT
+                        board[0][j] = VACANT
                     }
 
                     drawBoard();
