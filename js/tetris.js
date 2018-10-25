@@ -17,6 +17,12 @@ const PIECES = [
     [J, "orange"]
 ];
 
+class Game {
+    constructor() {
+
+    }
+}
+
 class Piece {
     constructor(tetromino, color) {
         this.tetromino = tetromino;
@@ -27,8 +33,12 @@ class Piece {
         this.x = 3;
         this.y = -2;
 
-        this.timerID = setInterval(this.moveDown.bind(this), 1000);
+        this.isLocked = false;
+        this.gameOver = false;
+
+        this.timerID = setInterval(this.moveDown.bind(this), 1000)
     }
+
 
     draw() {
         for(let r = 0; r < this.activeTetromino.length; r++) {
@@ -43,13 +53,15 @@ class Piece {
     undraw() {
         for(let r = 0; r < this.activeTetromino.length; r++) {
             for(let c = 0; c < this.activeTetromino.length; c++) {
-                drawSquare(this.x + c, this.y + r, VACANT);
+                if(this.activeTetromino[r][c]) {
+                    drawSquare(this.x + c, this.y + r, VACANT);
+                }
             }
         }
     }
 
     moveRight() {
-        if(!this.isCollision(1, 0)) {
+        if(!this.isCollision(1, 0) && !this.isLocked) {
             this.undraw();
             this.x++;
             this.draw();
@@ -57,7 +69,7 @@ class Piece {
     }
 
     moveLeft() {
-        if(!this.isCollision(-1, 0)) {
+        if(!this.isCollision(-1, 0) && !this.isLocked) {
             this.undraw();
             this.x--;
             this.draw();
@@ -65,18 +77,34 @@ class Piece {
     }
 
     moveDown() {
-        if(!this.isCollision(0, 1)) {
+        if(!this.isCollision(0, 1) && !this.isLocked) {
             this.undraw();
+            console.log('move');
             this.y++;
             this.draw();
+        } else {
+            this.lock();
+            console.log('locked!');
         }
     }
     
     rotate() {
-        this.undraw();
-        this.tetrominoNumber = (this.tetrominoNumber + 1) % this.tetromino.length;
-        this.activeTetromino = this.tetromino[this.tetrominoNumber];
-        this.draw();
+        if(!this.isLocked && !this.isCollision(1, 0) && !this.isCollision(-1, 0)) {
+            this.undraw();
+            this.tetrominoNumber = (this.tetrominoNumber + 1) % this.tetromino.length; //choose pattern
+            this.activeTetromino = this.tetromino[this.tetrominoNumber]; //apply pattern
+            if(this.isCollision(-1, 0)) {
+                this.x++;
+            }
+            if(this.isCollision(1, 0)) {
+                this.x--;
+            }
+            if(this.isCollision(0, 0)) {
+                this.y--;
+            }
+
+            this.draw();
+        }
     }
 
     isCollision(deltaX, deltaY) {
@@ -104,6 +132,66 @@ class Piece {
         }
         return false;
     }
+
+    wallKick(kick) {
+        for(let r = 0; r < this.activeTetromino.length; r++) {
+            for(let c = 0; c < this.activeTetromino.length; c++) {
+                if(this.x < 0 || this.x + c >= COL) {
+                    this.x += kick;
+                }
+                if(this.y + r + 1 > ROW) {
+                    this.y += kick;
+                     console.log(this.y + r + 'kicked up!');
+                }
+            }
+        }
+    }
+
+    lock() {
+        clearInterval(this.timerID);
+        for(let r = 0; r < this.activeTetromino.length; r++) {
+            for(let c = 0; c < this.activeTetromino.length; c++) {
+                if(!this.activeTetromino[r][c] || this.y + r >= ROW) { //ignore Vacant squares of piece and prevent drawing out of board
+                    continue;
+                }
+                if(this.y < 0) { //if piece is above board then lock it and set game over
+                    this.isLocked = true;
+                    this.gameOver = true;
+                    continue;
+                }
+                console.log(this.y + r + 'next square');
+                board[this.y + r][this.x + c] = this.color;
+                this.undraw();
+                drawBoard();
+                this.isLocked= true;
+            }
+
+            for(let r = 0; r < ROW; r++) { //clearing full row
+                let isFull = true;
+                for(let c = 0; c < COL; c++) {
+                    isFull = isFull && (board[r][c] !== VACANT); //checking if row is full
+                }
+                if(isFull) {
+                    for(let i = r; i > 1; i--) {
+                        for(let j = 0; j < COL; j++) {
+                            board[i][j] = board[i - 1][j]; //drop rows by one
+                        }
+                    }
+                    for(let j = 0; j < COL; j++) { //top row doesn't have row above to inherit, so set to Vacant
+                        board[0][c] = VACANT
+                    }
+
+                    drawBoard();
+                    console.log('row removed');
+                }
+            }
+        }
+        if(!this.gameOver) {
+            createPiece();
+        } else {
+            alert('game over');
+        }
+    }
 }
 
 //SQUARE drawing
@@ -129,7 +217,7 @@ for(let r = 0; r < ROW; r++) { //init board as empty
     }
 } 
 
-function drawBoard() {
+function drawBoard(obj) {
     for(let r = 0; r < ROW; r++) {
         for(let c = 0; c < COL; c++) {
             drawSquare(c, r, board[r][c]);
@@ -148,10 +236,9 @@ function randomPiece() {
 }
 
 function randomColor() {
-    let r = Math.floor(Math.random() * PIECES.length);
-    return PIECES[r][1];
+    let r = Math.floor(Math.random() * 566666 + 100000);
+    return '#' + r;
 }
-
 //initiate a new piece
 
 function createPiece() {
@@ -166,7 +253,7 @@ function createPiece() {
         if(event.keyCode == 39) {
             p.moveRight();
         }
-        if(event.keyCode == 40) {
+        if(event.keyCode == 40 && !p.isLocked) {
             p.moveDown();
         }
         
